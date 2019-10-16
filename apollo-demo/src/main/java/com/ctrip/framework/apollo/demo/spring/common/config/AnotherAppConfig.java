@@ -10,4 +10,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @EnableApolloConfig(value = {"TEST1.apollo", "application.yaml"}, order = 11)
 public class AnotherAppConfig {
+
 }

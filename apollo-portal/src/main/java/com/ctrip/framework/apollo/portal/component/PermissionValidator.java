@@ -57,7 +57,16 @@ public class PermissionValidator {
         rolePermissionService.userHasPermission(userInfoHolder.getUser().getUserId(),
         PermissionType.RELEASE_NAMESPACE, RoleUtils.buildNamespaceTargetId(appId, namespaceName, env));
   }
-
+  public boolean hasLookUpNamespacePermission(String appId, String namespaceName) {
+    return rolePermissionService.userHasPermission(userInfoHolder.getUser().getUserId(),
+            PermissionType.LOOKUP_NAMESPACE,
+            RoleUtils.buildNamespaceTargetId(appId, namespaceName));
+  }
+  public boolean hasLookUpNamespacePermission(String appId, String namespaceName, String env) {
+    return hasLookUpNamespacePermission(appId, namespaceName) ||
+            rolePermissionService.userHasPermission(userInfoHolder.getUser().getUserId(),
+                    PermissionType.LOOKUP_NAMESPACE, RoleUtils.buildNamespaceTargetId(appId, namespaceName, env));
+  }
   public boolean hasDeleteNamespacePermission(String appId) {
     return hasAssignRolePermission(appId) || isSuperAdmin();
   }
@@ -69,6 +78,7 @@ public class PermissionValidator {
   public boolean hasOperateNamespacePermission(String appId, String namespaceName, String env) {
     return hasOperateNamespacePermission(appId, namespaceName) ||
         hasModifyNamespacePermission(appId, namespaceName, env) ||
+            hasLookUpNamespacePermission(appId, namespaceName, env) ||
         hasReleaseNamespacePermission(appId, namespaceName, env);
   }
 

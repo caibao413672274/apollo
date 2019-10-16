@@ -138,7 +138,7 @@
 
                             <tr ng-repeat="config in namespace.branch.branchItems |orderBy:col:desc"
                                 ng-if="config.item.key">
-                                <td width="7%" class="text-center">
+                                <td width="6%" class="text-center">
                                     <span class="label label-warning no-radius cursor-pointer" data-tooltip="tooltip"
                                         data-placement="bottom"
                                         title="{{'Component.Namespace.Branch.Body.ClickToSeeItemValue' | translate }}"
@@ -181,9 +181,9 @@
                                     <span ng-bind="config.item.comment | limitTo: 250"></span>
                                     <span ng-bind="config.item.comment.length > 250 ?'...' : ''"></span>
                                 </td>
-                                <td width="10%" ng-bind="config.item.dataChangeLastModifiedBy">
+                                <td width="11%" ng-bind="config.item.dataChangeLastModifiedBy">
                                 </td>
-                                <td width="10%"
+                                <td width="9%"
                                     ng-bind="config.item.dataChangeLastModifiedTime | date: 'yyyy-MM-dd HH:mm:ss'">
                                 </td>
 

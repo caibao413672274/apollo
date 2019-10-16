@@ -3,6 +3,8 @@ package com.ctrip.framework.apollo.portal.spi.configuration;
 import com.ctrip.framework.apollo.common.condition.ConditionalOnMissingProfile;
 import com.ctrip.framework.apollo.core.utils.StringUtils;
 import com.ctrip.framework.apollo.portal.component.config.PortalConfig;
+import com.ctrip.framework.apollo.portal.repository.UTUserRepository;
+import com.ctrip.framework.apollo.portal.repository.UserRepository;
 import com.ctrip.framework.apollo.portal.spi.LogoutHandler;
 import com.ctrip.framework.apollo.portal.spi.SsoHeartbeatHandler;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
@@ -20,7 +22,11 @@ import com.ctrip.framework.apollo.portal.spi.ldap.FilterLdapByGroupUserSearch;
 import com.ctrip.framework.apollo.portal.spi.ldap.LdapUserService;
 import com.ctrip.framework.apollo.portal.spi.springsecurity.SpringSecurityUserInfoHolder;
 import com.ctrip.framework.apollo.portal.spi.springsecurity.SpringSecurityUserService;
+import com.ctrip.framework.apollo.portal.spi.unitop.*;
 import com.google.common.collect.Maps;
+import com.unitop.sso.core.conf.Conf;
+import com.unitop.sso.core.filter.UnitopSsoFilter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -56,7 +62,53 @@ import java.util.Map;
 
 @Configuration
 public class AuthConfiguration {
+  @Configuration
+  @Profile("unitop")
+  static class UnitopAuthAutoConfiguration {
 
+    @Autowired
+    private PortalConfig portalConfig;
+
+    @Bean
+    public FilterRegistrationBean testFilterRegistrationBean() {
+
+      FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+      registrationBean.setFilter(new UnitopSsoFilter());
+      registrationBean.addUrlPatterns("/*");
+      registrationBean.addInitParameter(Conf.ssoServer, portalConfig.utSSOServerUrlPrefix());
+      registrationBean.addInitParameter(Conf.logoutPath, portalConfig.utSSOLogoutUrl());
+      registrationBean.addInitParameter(Conf.ssoignorePattern, portalConfig.utSsoignorePattern());
+      registrationBean.setName("unitopSsoAppFilter");
+      registrationBean.setOrder(1);
+
+
+      return registrationBean;
+    }
+    @Bean
+    public UnitopLocalUserService unitopLocalUserService(UTUserRepository utUserRepository,UserService utUserService) {
+      return new UnitopLocalUserService(utUserRepository,utUserService);
+    }
+    @Bean
+    public UTUserInfoHolder utUserInfoHolder(UnitopLocalUserService unitopLocalUserService) {
+      return new UTUserInfoHolder(unitopLocalUserService);
+    }
+
+    @Bean
+    public UTLogoutHandler logoutHandler() {
+      return new UTLogoutHandler();
+    }
+
+    @Bean
+    public UserService utUserService(PortalConfig portalConfig) {
+      return new UTUserService(portalConfig);
+    }
+
+    @Bean
+    public SsoHeartbeatHandler utSsoHeartbeatHandler() {
+      return new UTSsoHeartbeatHandler();
+    }
+
+  }
   /**
    * spring.profiles.active = ctrip
    */
@@ -422,7 +474,7 @@ public class AuthConfiguration {
    * default profile
    */
   @Configuration
-  @ConditionalOnMissingProfile({"ctrip", "auth", "ldap"})
+  @ConditionalOnMissingProfile({"ctrip", "auth", "ldap","unitop"})
   static class DefaultAuthAutoConfiguration {
 
     @Bean

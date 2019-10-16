@@ -6,6 +6,7 @@ import com.ctrip.framework.apollo.core.enums.Env;
 import com.ctrip.framework.apollo.portal.api.AdminServiceAPI;
 import com.ctrip.framework.apollo.portal.constant.TracerEventType;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.ctrip.framework.apollo.tracer.Tracer;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +39,7 @@ public class ClusterService {
   }
 
   public void deleteCluster(Env env, String appId, String clusterName){
-    clusterAPI.delete(env, appId, clusterName, userInfoHolder.getUser().getUserId());
+    clusterAPI.delete(env, appId, clusterName,  CommonUtils.getOperator(userInfoHolder));
   }
 
   public ClusterDTO loadCluster(String appId, Env env, String clusterName){

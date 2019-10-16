@@ -18,6 +18,7 @@ import com.ctrip.framework.apollo.portal.constant.TracerEventType;
 import com.ctrip.framework.apollo.portal.entity.bo.ItemBO;
 import com.ctrip.framework.apollo.portal.entity.bo.NamespaceBO;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.ctrip.framework.apollo.portal.util.RoleUtils;
 import com.ctrip.framework.apollo.tracer.Tracer;
 import com.google.common.collect.Maps;
@@ -78,9 +79,9 @@ public class NamespaceService {
 
   public NamespaceDTO createNamespace(Env env, NamespaceDTO namespace) {
     if (StringUtils.isEmpty(namespace.getDataChangeCreatedBy())) {
-      namespace.setDataChangeCreatedBy(userInfoHolder.getUser().getUserId());
+      namespace.setDataChangeCreatedBy( CommonUtils.getOperator(userInfoHolder));
     }
-    namespace.setDataChangeLastModifiedBy(userInfoHolder.getUser().getUserId());
+    namespace.setDataChangeLastModifiedBy( CommonUtils.getOperator(userInfoHolder));
     NamespaceDTO createdNamespace = namespaceAPI.createNamespace(env, namespace);
 
     Tracer.logEvent(TracerEventType.CREATE_NAMESPACE,
@@ -117,7 +118,7 @@ public class NamespaceService {
           "Can not delete public namespace which has associated namespaces");
     }
 
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator =  CommonUtils.getOperator(userInfoHolder);
 
     namespaceAPI.deleteNamespace(env, appId, clusterName, namespaceName, operator);
   }

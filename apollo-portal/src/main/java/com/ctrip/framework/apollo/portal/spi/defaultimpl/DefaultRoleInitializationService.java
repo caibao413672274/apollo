@@ -72,7 +72,11 @@ public class DefaultRoleInitializationService implements RoleInitializationServi
 
   @Transactional
   public void initNamespaceRoles(String appId, String namespaceName, String operator) {
-
+    String lookUpNamespaceEnvRoleName = RoleUtils.buildLookUpNamespaceRoleName(appId, namespaceName);
+    if (rolePermissionService.findRoleByRoleName(lookUpNamespaceEnvRoleName) == null) {
+      createNamespaceRole(appId, namespaceName, PermissionType.LOOKUP_NAMESPACE,
+              lookUpNamespaceEnvRoleName, operator);
+    }
     String modifyNamespaceRoleName = RoleUtils.buildModifyNamespaceRoleName(appId, namespaceName);
     if (rolePermissionService.findRoleByRoleName(modifyNamespaceRoleName) == null) {
       createNamespaceRole(appId, namespaceName, PermissionType.MODIFY_NAMESPACE,
@@ -97,6 +101,12 @@ public class DefaultRoleInitializationService implements RoleInitializationServi
 
   @Transactional
   public void initNamespaceSpecificEnvRoles(String appId, String namespaceName, String env, String operator) {
+    String lookUpNamespaceEnvRoleName = RoleUtils.buildLookUpNamespaceRoleName(appId, namespaceName, env);
+    if (rolePermissionService.findRoleByRoleName(lookUpNamespaceEnvRoleName) == null) {
+      createNamespaceEnvRole(appId, namespaceName, PermissionType.LOOKUP_NAMESPACE, env,
+              lookUpNamespaceEnvRoleName, operator);
+    }
+
     String modifyNamespaceEnvRoleName = RoleUtils.buildModifyNamespaceRoleName(appId, namespaceName, env);
     if (rolePermissionService.findRoleByRoleName(modifyNamespaceEnvRoleName) == null) {
       createNamespaceEnvRole(appId, namespaceName, PermissionType.MODIFY_NAMESPACE, env,
@@ -127,7 +137,7 @@ public class DefaultRoleInitializationService implements RoleInitializationServi
   }
 
   @Transactional
-  private void createManageAppMasterRole(String appId, String operator) {
+  public void createManageAppMasterRole(String appId, String operator) {
     Permission permission = createPermission(appId, PermissionType.MANAGE_APP_MASTER, operator);
     rolePermissionService.createPermission(permission);
     Role role = createRole(RoleUtils.buildAppRoleName(appId, PermissionType.MANAGE_APP_MASTER), operator);

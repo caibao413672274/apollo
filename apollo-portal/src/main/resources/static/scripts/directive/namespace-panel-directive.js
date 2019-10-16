@@ -292,6 +292,33 @@ function directive($window, $translate, toastr, AppUtil, EventManager, Permissio
                                 }
                             }
                         });
+
+                    PermissionService.has_lookup_namespace_permission(
+                        scope.appId,
+                        namespace.baseInfo.namespaceName)
+                        .then(function (result) {
+                            if (!result.hasPermission) {
+                                PermissionService.has_lookup_namespace_env_permission(
+                                    scope.appId,
+                                    scope.env,
+                                    namespace.baseInfo.namespaceName
+                                )
+                                    .then(function (result) {
+                                        //branch has same permission
+                                        namespace.hasLookPermission = result.hasPermission;
+                                        if (namespace.branch) {
+                                            namespace.branch.hasLookPermission = result.hasPermission;
+                                        }
+                                    });
+                            }
+                            else {
+                                //branch has same permission
+                                namespace.hasLookPermission = result.hasPermission;
+                                if (namespace.branch) {
+                                    namespace.branch.hasLookPermission = result.hasPermission;
+                                }
+                            }
+                        });
                 }
 
                 function initLinkedNamespace(namespace) {

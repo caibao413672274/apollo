@@ -16,6 +16,7 @@ import com.ctrip.framework.apollo.portal.entity.model.NamespaceTextModel;
 import com.ctrip.framework.apollo.portal.entity.vo.ItemDiffs;
 import com.ctrip.framework.apollo.portal.entity.vo.NamespaceIdentifier;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.ctrip.framework.apollo.tracer.Tracer;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -72,7 +73,7 @@ public class ItemService {
       return;
     }
 
-    changeSets.setDataChangeLastModifiedBy(userInfoHolder.getUser().getUserId());
+    changeSets.setDataChangeLastModifiedBy(CommonUtils.getOperator(userInfoHolder));
     updateItems(appId, env, clusterName, namespaceName, changeSets);
 
     Tracer.logEvent(TracerEventType.MODIFY_NAMESPACE_BY_TEXT,
@@ -127,7 +128,7 @@ public class ItemService {
     for (ItemDiffs itemDiff : itemDiffs) {
       NamespaceIdentifier namespaceIdentifier = itemDiff.getNamespace();
       ItemChangeSets changeSets = itemDiff.getDiffs();
-      changeSets.setDataChangeLastModifiedBy(userInfoHolder.getUser().getUserId());
+      changeSets.setDataChangeLastModifiedBy(CommonUtils.getOperator(userInfoHolder));
 
       String appId = namespaceIdentifier.getAppId();
       Env env = namespaceIdentifier.getEnv();

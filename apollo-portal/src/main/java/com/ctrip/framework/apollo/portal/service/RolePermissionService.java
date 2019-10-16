@@ -11,7 +11,13 @@ import java.util.Set;
  * @author Jason Song(song_s@ctrip.com)
  */
 public interface RolePermissionService {
-
+  /**
+   * 用户是否有指定的权限
+   * @param userId
+   * @return
+   */
+  public boolean hasPermissionForUser(String userId,String permissionType);
+  public List<Permission> queryAppWithRoleForUser(String userId);
   /**
    * Create role with permissions, note that role name should be unique
    */

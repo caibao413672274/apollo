@@ -37,6 +37,7 @@ public class SimpleApolloConfigDemo {
       }
     };
     config = ConfigService.getAppConfig();
+
     config.addChangeListener(changeListener);
   }
 

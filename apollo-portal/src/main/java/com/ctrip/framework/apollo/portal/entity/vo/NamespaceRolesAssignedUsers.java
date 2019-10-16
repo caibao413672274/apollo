@@ -9,6 +9,10 @@ public class NamespaceRolesAssignedUsers {
   private String appId;
   private String namespaceName;
 
+  private Set<UserInfo> lookUpRoleUsers;
+
+
+
   private Set<UserInfo> modifyRoleUsers;
   private Set<UserInfo> releaseRoleUsers;
 
@@ -33,16 +37,22 @@ public class NamespaceRolesAssignedUsers {
   }
 
   public void setModifyRoleUsers(
-      Set<UserInfo> modifyRoleUsers) {
+          Set<UserInfo> modifyRoleUsers) {
     this.modifyRoleUsers = modifyRoleUsers;
   }
+  public Set<UserInfo> getLookUpRoleUsers() {
+    return lookUpRoleUsers;
+  }
 
+  public void setLookUpRoleUsers(Set<UserInfo> lookUpRoleUsers) {
+    this.lookUpRoleUsers = lookUpRoleUsers;
+  }
   public Set<UserInfo> getReleaseRoleUsers() {
     return releaseRoleUsers;
   }
 
   public void setReleaseRoleUsers(
-      Set<UserInfo> releaseRoleUsers) {
+          Set<UserInfo> releaseRoleUsers) {
     this.releaseRoleUsers = releaseRoleUsers;
   }
 }

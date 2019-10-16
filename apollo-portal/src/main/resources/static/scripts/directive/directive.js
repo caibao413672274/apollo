@@ -81,6 +81,7 @@ directive_module.directive('apollonav',
 
                 UserService.load_user().then(function (result) {
                     scope.userName = result.userId;
+                    scope.userRealName = result.name;
                 }, function (result) {
 
                 });
@@ -278,7 +279,9 @@ directive_module.directive('apollouserselector', function ($compile, $window) {
                         data.forEach(function (user) {
                             users.push({
                                 id: user.userId,
-                                text: user.userId + " | " + user.name
+                                name:user.name,
+                                text: user.userId + " | " + user.name+ " | " + user.orgName+ " | " + user.stationName
+
                             })
                         });
                         return {
@@ -329,7 +332,9 @@ directive_module.directive('apollomultipleuserselector', function ($compile, $wi
                         data.forEach(function (user) {
                             users.push({
                                 id: user.userId,
-                                text: user.userId + " | " + user.name
+                                name:user.name,
+                                text: user.userId + " | " + user.name+ " | " + user.orgName+ " | " + user.stationName
+
                             })
                         });
                         return {

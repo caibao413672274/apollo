@@ -11,6 +11,15 @@ appService.service('PermissionService', ['$resource', '$q', function ($resource,
             method: 'GET',
             url: '/apps/:appId/permissions/:permissionType'
         },
+        has_lookup_app_permission_Res: {
+            method: 'GET',
+            url: '/apps/:appId/check-lookup'
+        },
+
+        has_permission_foruser: {
+            method: 'GET',
+            url: '/permissions/user/:permissionType'
+        },
         has_namespace_permission: {
             method: 'GET',
             url: '/apps/:appId/namespaces/:namespaceName/permissions/:permissionType'
@@ -86,7 +95,30 @@ appService.service('PermissionService', ['$resource', '$q', function ($resource,
             });
         return d.promise;
     }
-
+    function hasAppLookUpPermission(appId) {
+        var d = $q.defer();
+        permission_resource.has_lookup_app_permission_Res({
+                appId: appId
+            },
+            function (result) {
+                d.resolve(result);
+            }, function (result) {
+                d.reject(result);
+            });
+        return d.promise;
+    }
+    function hasPermissionForUser(permissionType) {
+        var d = $q.defer();
+        permission_resource.has_permission_foruser({
+                permissionType: permissionType
+            },
+            function (result) {
+                d.resolve(result);
+            }, function (result) {
+                d.reject(result);
+            });
+        return d.promise;
+    }
     function hasAppPermission(appId, permissionType) {
         var d = $q.defer();
         permission_resource.has_app_permission({
@@ -209,6 +241,12 @@ appService.service('PermissionService', ['$resource', '$q', function ($resource,
         has_create_cluster_permission: function (appId) {
             return hasAppPermission(appId, 'CreateCluster');
         },
+        // has_create_app_permission: function () {
+        //     return hasPermissionForUser('CreateAPP');
+        // },
+        has_lookup_app_permission: function (appId) {
+            return hasAppLookUpPermission(appId);
+        },
         has_assign_user_permission: function (appId) {
             return hasAppPermission(appId, 'AssignRole');
         },
@@ -217,6 +255,12 @@ appService.service('PermissionService', ['$resource', '$q', function ($resource,
         },
         has_modify_namespace_env_permission: function (appId, env, namespaceName) {
             return hasNamespaceEnvPermission(appId, env, namespaceName, 'ModifyNamespace');
+        },
+        has_lookup_namespace_permission: function (appId, namespaceName) {
+            return hasNamespacePermission(appId, namespaceName, 'LookUpNamespace');
+        },
+        has_lookup_namespace_env_permission: function (appId, env, namespaceName) {
+            return hasNamespaceEnvPermission(appId, env, namespaceName, 'LookUpNamespace');
         },
         has_release_namespace_permission: function (appId, namespaceName) {
             return hasNamespacePermission(appId, namespaceName, 'ReleaseNamespace');
@@ -241,6 +285,12 @@ appService.service('PermissionService', ['$resource', '$q', function ($resource,
         assign_modify_namespace_env_role: function (appId, env, namespaceName, user) {
             return assignNamespaceEnvRoleToUser(appId, env, namespaceName, 'ModifyNamespace', user);
         },
+        assign_lookup_namespace_role: function (appId, namespaceName, user) {
+            return assignNamespaceRoleToUser(appId, namespaceName, 'LookUpNamespace', user);
+        },
+        assign_lookup_namespace_env_role: function (appId, env, namespaceName, user) {
+            return assignNamespaceEnvRoleToUser(appId, env, namespaceName, 'LookUpNamespace', user);
+        },
         assign_release_namespace_role: function (appId, namespaceName, user) {
             return assignNamespaceRoleToUser(appId, namespaceName, 'ReleaseNamespace', user);
         },
@@ -252,6 +302,12 @@ appService.service('PermissionService', ['$resource', '$q', function ($resource,
         },
         remove_modify_namespace_env_role: function (appId, env, namespaceName, user) {
             return removeNamespaceEnvRoleFromUser(appId, env, namespaceName, 'ModifyNamespace', user);
+        },
+        remove_lookup_namespace_role: function (appId, namespaceName, user) {
+            return removeNamespaceRoleFromUser(appId, namespaceName, 'LookUpNamespace', user);
+        },
+        remove_lookup_namespace_env_role: function (appId, env, namespaceName, user) {
+            return removeNamespaceEnvRoleFromUser(appId, env, namespaceName, 'LookUpNamespace', user);
         },
         remove_release_namespace_role: function (appId, namespaceName, user) {
             return removeNamespaceRoleFromUser(appId, namespaceName, 'ReleaseNamespace', user);

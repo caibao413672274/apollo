@@ -6,8 +6,45 @@ public class UserInfo {
   private String name;
   private String email;
 
+  private String orgNo;
+  private String orgName;
+
+  private String stationNo;
+  private String stationName;
   public UserInfo() {
 
+  }
+
+  public String getStationNo() {
+    return stationNo;
+  }
+
+  public void setStationNo(String stationNo) {
+    this.stationNo = stationNo;
+  }
+
+  public String getStationName() {
+    return stationName;
+  }
+
+  public void setStationName(String stationName) {
+    this.stationName = stationName;
+  }
+
+  public String getOrgNo() {
+    return orgNo;
+  }
+
+  public void setOrgNo(String orgNo) {
+    this.orgNo = orgNo;
+  }
+
+  public String getOrgName() {
+    return orgName;
+  }
+
+  public void setOrgName(String orgName) {
+    this.orgName = orgName;
   }
 
   public UserInfo(String userId) {

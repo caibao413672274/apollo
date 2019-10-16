@@ -14,6 +14,7 @@ import com.ctrip.framework.apollo.portal.entity.model.NamespaceReleaseModel;
 import com.ctrip.framework.apollo.portal.entity.vo.ReleaseCompareResult;
 import com.ctrip.framework.apollo.portal.enums.ChangeType;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.ctrip.framework.apollo.tracer.Tracer;
 import com.google.common.base.Objects;
 import com.google.gson.Gson;
@@ -49,7 +50,7 @@ public class ReleaseService {
     String clusterName = model.getClusterName();
     String namespaceName = model.getNamespaceName();
     String releaseBy = StringUtils.isEmpty(model.getReleasedBy()) ?
-                       userInfoHolder.getUser().getUserId() : model.getReleasedBy();
+            CommonUtils.getOperator(userInfoHolder) : model.getReleasedBy();
 
     ReleaseDTO releaseDTO = releaseAPI.createRelease(appId, env, clusterName, namespaceName,
                                                      model.getReleaseTitle(), model.getReleaseComment(),

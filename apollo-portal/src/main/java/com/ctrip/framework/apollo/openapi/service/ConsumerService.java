@@ -15,6 +15,7 @@ import com.ctrip.framework.apollo.portal.entity.po.Role;
 import com.ctrip.framework.apollo.portal.service.RolePermissionService;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
 import com.ctrip.framework.apollo.portal.spi.UserService;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.ctrip.framework.apollo.portal.util.RoleUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -82,7 +83,7 @@ public class ConsumerService {
     }
     consumer.setOwnerEmail(owner.getEmail());
 
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator =  CommonUtils.getOperator(userInfoHolder);
     consumer.setDataChangeCreatedBy(operator);
     consumer.setDataChangeLastModifiedBy(operator);
 
@@ -149,7 +150,7 @@ public class ConsumerService {
       return Arrays.asList(managedModifyRole, managedReleaseRole);
     }
 
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator =  CommonUtils.getOperator(userInfoHolder);
 
     ConsumerRole namespaceModifyConsumerRole = createConsumerRole(consumerId, namespaceModifyRoleId, operator);
     ConsumerRole namespaceReleaseConsumerRole = createConsumerRole(consumerId, namespaceReleaseRoleId, operator);
@@ -178,7 +179,7 @@ public class ConsumerService {
       return managedModifyRole;
     }
 
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator =  CommonUtils.getOperator(userInfoHolder);
     ConsumerRole consumerRole = createConsumerRole(consumerId, roleId, operator);
     return consumerRoleRepository.save(consumerRole);
   }
@@ -197,7 +198,7 @@ public class ConsumerService {
 
   private ConsumerToken generateConsumerToken(Consumer consumer, Date expires) {
     long consumerId = consumer.getId();
-    String createdBy = userInfoHolder.getUser().getUserId();
+    String createdBy =  CommonUtils.getOperator(userInfoHolder);
     Date createdTime = new Date();
 
     ConsumerToken consumerToken = new ConsumerToken();

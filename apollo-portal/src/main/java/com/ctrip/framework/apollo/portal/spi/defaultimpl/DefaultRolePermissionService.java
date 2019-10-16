@@ -2,6 +2,7 @@ package com.ctrip.framework.apollo.portal.spi.defaultimpl;
 
 import com.ctrip.framework.apollo.openapi.repository.ConsumerRoleRepository;
 import com.ctrip.framework.apollo.portal.component.config.PortalConfig;
+import com.ctrip.framework.apollo.portal.constant.PermissionType;
 import com.ctrip.framework.apollo.portal.entity.bo.UserInfo;
 import com.ctrip.framework.apollo.portal.entity.po.Permission;
 import com.ctrip.framework.apollo.portal.entity.po.Role;
@@ -12,15 +13,16 @@ import com.ctrip.framework.apollo.portal.repository.RolePermissionRepository;
 import com.ctrip.framework.apollo.portal.repository.RoleRepository;
 import com.ctrip.framework.apollo.portal.repository.UserRoleRepository;
 import com.ctrip.framework.apollo.portal.service.RolePermissionService;
+import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.spi.unitop.UTUserInfoHolder;
+import com.ctrip.framework.apollo.portal.spi.unitop.UnitopLocalUserService;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
+import com.google.common.collect.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -45,7 +47,12 @@ public class DefaultRolePermissionService implements RolePermissionService {
     private PortalConfig portalConfig;
     @Autowired
     private ConsumerRoleRepository consumerRoleRepository;
+    @Autowired
+    private   UserInfoHolder userInfoHolder;
 
+
+    @Autowired
+    private UnitopLocalUserService unitopLocalUserService;
     /**
      * Create role with permissions, note that role name should be unique
      */
@@ -136,6 +143,13 @@ public class DefaultRolePermissionService implements RolePermissionService {
 
         Set<UserInfo> users = userRoles.stream().map(userRole -> {
             UserInfo userInfo = new UserInfo();
+            UserInfo localUser= unitopLocalUserService.getLocalUser(userRole.getUserId());
+            if(localUser!=null){
+                userInfo.setName(MessageFormat.format("{0}({1})", localUser.getName(),userRole.getUserId()));
+            }
+            else{
+                 userInfo.setName(userRole.getUserId());
+             }
             userInfo.setUserId(userRole.getUserId());
             return userInfo;
         }).collect(Collectors.toSet());
@@ -154,15 +168,16 @@ public class DefaultRolePermissionService implements RolePermissionService {
      * Check whether user has the permission
      */
     public boolean userHasPermission(String userId, String permissionType, String targetId) {
+        if (isSuperAdmin(userId)) {
+            return true;
+        }
+
         Permission permission =
                 permissionRepository.findTopByPermissionTypeAndTargetId(permissionType, targetId);
         if (permission == null) {
             return false;
         }
 
-        if (isSuperAdmin(userId)) {
-            return true;
-        }
 
         List<UserRole> userRoles = userRoleRepository.findByUserId(userId);
         if (CollectionUtils.isEmpty(userRoles)) {
@@ -197,6 +212,9 @@ public class DefaultRolePermissionService implements RolePermissionService {
         return Lists.newLinkedList(roleRepository.findAllById(roleIds));
     }
 
+    public boolean hasPermissionForUser(String userId,String permissionType) {
+        return userHasPermission(userId,permissionType, PermissionType.APP_Perm);
+    }
     public boolean isSuperAdmin(String userId) {
         return portalConfig.superAdmins().contains(userId);
     }
@@ -291,5 +309,31 @@ public class DefaultRolePermissionService implements RolePermissionService {
             // 5. delete Consumer Role
             consumerRoleRepository.batchDeleteByRoleIds(roleIds, operator);
         }
+    }
+    /**
+     * 查询当前用户拥有查看、修改、发布的应用，返回权限资源用于判断
+     * @return
+     */
+    public List<Permission> queryAppWithRoleForUser(String userId) {
+
+        List<UserRole> userRoles = userRoleRepository.findByUserId(userId);
+        if (CollectionUtils.isEmpty(userRoles)) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> roleIds =
+                FluentIterable.from(userRoles).transform(userRole -> userRole.getRoleId()).toSet();
+        List<RolePermission> rolePermissions = rolePermissionRepository.findByRoleIdIn(roleIds);
+        if (CollectionUtils.isEmpty(rolePermissions)) {
+            return Collections.emptyList();
+        }
+        List<Long> pIds =
+                FluentIterable.from(rolePermissions).transform(userRole -> userRole.getPermissionId()).toList();
+        Iterable<Permission> permissions = permissionRepository.findAllById(pIds);
+        if (permissions==null) {
+            return Collections.emptyList();
+        }
+
+        return Lists.newArrayList(permissions);
     }
 }

@@ -86,7 +86,7 @@ function SettingController($scope, $location, $translate, toastr,
                 $scope.appRoleUsers = result;
                 $scope.admins = [];
                 $scope.appRoleUsers.masterUsers.forEach(function (user) {
-                    $scope.admins.push(user.userId);
+                    $scope.admins.push(user.name);
                 });
 
             });
@@ -119,13 +119,14 @@ function SettingController($scope, $location, $translate, toastr,
             return;
         }
         var toAssignMasterRoleUser = user.id;
+        var toAssignMasterRoleUserName=user.name+"("+user.id+")";
         $scope.submitBtnDisabled = true;
         PermissionService.assign_master_role($scope.pageContext.appId,
             toAssignMasterRoleUser)
             .then(function (result) {
                 $scope.submitBtnDisabled = false;
                 toastr.success($translate.instant('App.Setting.Added'));
-                $scope.appRoleUsers.masterUsers.push({ userId: toAssignMasterRoleUser });
+                $scope.appRoleUsers.masterUsers.push({ userId: toAssignMasterRoleUser,name:toAssignMasterRoleUserName });
                 $('.' + $scope.userSelectWidgetId).select2("val", "");
             }, function (result) {
                 $scope.submitBtnDisabled = false;

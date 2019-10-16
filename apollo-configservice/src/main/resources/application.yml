@@ -8,7 +8,7 @@ ctrip:
   appid: 100003171
 
 server:
-  port: 8080
+  port: ${eureka.port}
 
 logging:
   file: /opt/logs/100003171/apollo-configservice.log

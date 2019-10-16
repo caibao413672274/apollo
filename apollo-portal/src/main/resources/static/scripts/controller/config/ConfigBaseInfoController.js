@@ -17,7 +17,7 @@ function ConfigBaseInfoController($rootScope, $scope, $window, $location, $trans
         $window.location.href = '/index.html';
         return;
     }
-
+    checkAppLookup();
     initPage();
 
     function initPage() {
@@ -330,7 +330,19 @@ function ConfigBaseInfoController($rootScope, $scope, $window, $location, $trans
                 })
         };
     }
+    function checkAppLookup() {
+        //是否有当前APP的查看权限，没有就不显示APP信息
+        PermissionService.has_lookup_app_permission(appId).then(function (result) {
+            $scope.hasLookUpAppPermission = result.hasPermission;
+            if (!result.hasPermission) {
 
+                $window.location.href = '/app/appright.html?#/appid=' + appId;
+                return;
+            }
+        }, function (result) {
+
+        });
+    }
     function handlePermission() {
         //permission
         PermissionService.has_create_namespace_permission(appId).then(function (result) {

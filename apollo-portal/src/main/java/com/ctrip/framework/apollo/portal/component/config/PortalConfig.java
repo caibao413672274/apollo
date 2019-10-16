@@ -217,7 +217,15 @@ public class PortalConfig extends RefreshableConfig {
   public String casServerUrlPrefix() {
     return getValue("casServerUrlPrefix");
   }
-
+  public String utSSOServerUrlPrefix() {
+    return getValue("unitop.sso.server");
+  }
+  public String utSsoignorePattern() {
+    return getValue("unitop.sso.ignorePattern");
+  }
+  public String utSSOLogoutUrl() {
+    return getValue("unitop.sso.logout.path","/logout");
+  }
   public String credisServiceUrl() {
     return getValue("credisServiceUrl");
   }

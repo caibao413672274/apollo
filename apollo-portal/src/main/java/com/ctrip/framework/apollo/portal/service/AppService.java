@@ -9,20 +9,28 @@ import com.ctrip.framework.apollo.core.enums.Env;
 import com.ctrip.framework.apollo.portal.api.AdminServiceAPI;
 import com.ctrip.framework.apollo.portal.constant.TracerEventType;
 import com.ctrip.framework.apollo.portal.entity.bo.UserInfo;
+import com.ctrip.framework.apollo.portal.entity.po.Role;
 import com.ctrip.framework.apollo.portal.entity.vo.EnvClusterInfo;
 import com.ctrip.framework.apollo.portal.repository.AppRepository;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
 import com.ctrip.framework.apollo.portal.spi.UserService;
+import com.ctrip.framework.apollo.portal.spi.unitop.UnitopLocalUserService;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
+import com.ctrip.framework.apollo.portal.util.RoleUtils;
 import com.ctrip.framework.apollo.tracer.Tracer;
 import com.google.common.collect.Lists;
-import org.springframework.data.domain.Page;
+import com.google.common.collect.Sets;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
+import java.text.MessageFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AppService {
@@ -37,6 +45,8 @@ public class AppService {
   private final FavoriteService favoriteService;
   private final UserService userService;
 
+  @Autowired
+  private UnitopLocalUserService unitopLocalUserService;
   public AppService(
       final UserInfoHolder userInfoHolder,
       final AdminServiceAPI.AppAPI appAPI,
@@ -64,23 +74,63 @@ public class AppService {
     if (apps == null) {
       return Collections.emptyList();
     }
-    return Lists.newArrayList((apps));
+    return   filterApp(Lists.newArrayList((apps)));
+  }
+
+  private List<App> filterApp(List<App> list){
+    boolean isadmin= rolePermissionService.isSuperAdmin(userInfoHolder.getUser().getUserId());
+    if(isadmin){
+      return list;
+    }else{
+      //找具有查看、修改、发布权限的应用
+
+      List<Role> userRoles = rolePermissionService.findUserRoles(userInfoHolder.getUser().getUserId());
+      Set<String> appIds = Sets.newHashSet();
+      for (Role role : userRoles) {
+        String appId = RoleUtils.extractAppIdFromRoleName(role.getRoleName());
+
+        if (appId != null) {
+          appIds.add(appId);
+        }
+      }
+      return list.stream().filter(app->appIds.contains(app.getAppId())).collect(Collectors.toList());
+//
+//      List<Permission> permissions= rolePermissionService.queryAppWithRoleForUser(userInfoHolder.getUser().getUserId());
+//      if(CollectionUtils.isEmpty(permissions))return Collections.emptyList();
+//      List<App> result=new ArrayList<App>();
+//      for(App app :list) {
+//        for (Permission p : permissions) {
+//          if (RoleType.isValidRoleType(p.getPermissionType()) && p.getTargetId().startsWith(app.getAppId()+"+")) {
+//            result.add(app);
+//            break;
+//          }
+//        }
+//      }
+//      return result;
+    }
   }
 
   public PageDTO<App> findAll(Pageable pageable) {
-    Page<App> apps = appRepository.findAll(pageable);
+//    Page<App> apps = appRepository.findAll(pageable);
+//    return new PageDTO<App>(apps.getContent(), pageable, apps.getTotalElements());
+List<App> all=findAll();
 
-    return new PageDTO<>(apps.getContent(), pageable, apps.getTotalElements());
+all= all.stream().skip(pageable.getOffset()).limit(pageable.getPageSize()).collect(Collectors.toList());
+    return new PageDTO<App>(all,pageable,all.size());
   }
 
   public PageDTO<App> searchByAppIdOrAppName(String query, Pageable pageable) {
-    Page<App> apps = appRepository.findByAppIdContainingOrNameContaining(query, query, pageable);
+//    Page<App> apps = appRepository.findByAppIdContainingOrNameContaining(query, query, pageable);
+//    return new PageDTO<App>(apps.getContent(), pageable, apps.getTotalElements());
+    List<App> apps =filterApp( appRepository.findByAppIdContainingOrNameContaining(query, query));
 
-    return new PageDTO<>(apps.getContent(), pageable, apps.getTotalElements());
+    apps= apps.stream().skip(pageable.getOffset()).limit(pageable.getPageSize()).collect(Collectors.toList());
+    return new PageDTO<App>(apps,pageable,apps.size());
   }
 
   public List<App> findByAppIds(Set<String> appIds) {
-    return appRepository.findByAppIdIn(appIds);
+   return filterApp(appRepository.findByAppIdIn(appIds));
+
   }
 
   public List<App> findByAppIds(Set<String> appIds, Pageable pageable) {
@@ -92,7 +142,15 @@ public class AppService {
   }
 
   public App load(String appId) {
-    return appRepository.findByAppId(appId);
+    App app= appRepository.findByAppId(appId);
+    UserInfo userInfo= unitopLocalUserService.getLocalUser(app.getOwnerName());
+    if(userInfo!=null){
+      app.setOwnerDisplayName(MessageFormat.format("{0}({1})",userInfo.getName(),app.getOwnerName()));
+    }
+    if(StringUtils.isEmpty(app.getOwnerDisplayName())){
+      app.setOwnerDisplayName(app.getOwnerName());
+    }
+    return app;
   }
 
   public AppDTO load(Env env, String appId) {
@@ -100,7 +158,7 @@ public class AppService {
   }
 
   public void createAppInRemote(Env env, App app) {
-    String username = userInfoHolder.getUser().getUserId();
+    String username = CommonUtils.getOperator(userInfoHolder);
     app.setDataChangeCreatedBy(username);
     app.setDataChangeLastModifiedBy(username);
 
@@ -123,7 +181,7 @@ public class AppService {
     }
     app.setOwnerEmail(owner.getEmail());
 
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator = CommonUtils.getOperator(userInfoHolder);
     app.setDataChangeCreatedBy(operator);
     app.setDataChangeLastModifiedBy(operator);
 
@@ -158,7 +216,7 @@ public class AppService {
     managedApp.setOwnerName(owner.getUserId());
     managedApp.setOwnerEmail(owner.getEmail());
 
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator = CommonUtils.getOperator(userInfoHolder);
     managedApp.setDataChangeLastModifiedBy(operator);
 
     return appRepository.save(managedApp);
@@ -176,7 +234,7 @@ public class AppService {
     if (managedApp == null) {
       throw new BadRequestException(String.format("App not exists. AppId = %s", appId));
     }
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator = CommonUtils.getOperator(userInfoHolder);
 
     //this operator is passed to com.ctrip.framework.apollo.portal.listener.DeletionListener.onAppDeletionEvent
     managedApp.setDataChangeLastModifiedBy(operator);

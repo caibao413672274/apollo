@@ -15,6 +15,8 @@ import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
+
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -164,7 +166,7 @@ public class ReleaseController {
       throw new AccessDeniedException("Access is denied");
     }
 
-    releaseService.rollback(Env.valueOf(env), releaseId, userInfoHolder.getUser().getUserId());
+    releaseService.rollback(Env.valueOf(env), releaseId, CommonUtils.getOperator(userInfoHolder));
 
     ConfigPublishEvent event = ConfigPublishEvent.instance();
     event.withAppId(release.getAppId())

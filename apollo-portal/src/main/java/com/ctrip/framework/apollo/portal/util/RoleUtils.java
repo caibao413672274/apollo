@@ -53,7 +53,12 @@ public class RoleUtils {
   public static String buildModifyDefaultNamespaceRoleName(String appId) {
     return STRING_JOINER.join(RoleType.MODIFY_NAMESPACE, appId, ConfigConsts.NAMESPACE_APPLICATION);
   }
-
+  public static String buildLookUpNamespaceRoleName(String appId, String namespaceName, String env) {
+    return STRING_JOINER.join(RoleType.LOOKUP_NAMESPACE, appId, namespaceName, env);
+  }
+  public static String buildLookUpNamespaceRoleName(String appId, String namespaceName) {
+    return buildLookUpNamespaceRoleName(appId, namespaceName, null);
+  }
   public static String buildReleaseNamespaceRoleName(String appId, String namespaceName) {
     return buildReleaseNamespaceRoleName(appId, namespaceName, null);
   }

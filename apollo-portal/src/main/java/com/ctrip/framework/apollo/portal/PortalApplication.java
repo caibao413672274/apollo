@@ -2,6 +2,7 @@ package com.ctrip.framework.apollo.portal;
 
 import com.ctrip.framework.apollo.common.ApolloCommonConfig;
 import com.ctrip.framework.apollo.openapi.PortalOpenApiConfig;
+import com.ctrip.framework.apollo.spring.annotation.EnableApolloConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
@@ -13,8 +14,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 @EnableAutoConfiguration
 @EnableTransactionManagement
+@EnableApolloConfig("redis")
 @ComponentScan(basePackageClasses = {ApolloCommonConfig.class,
-    PortalApplication.class, PortalOpenApiConfig.class})
+        PortalApplication.class, PortalOpenApiConfig.class}
+        ,basePackages = {"com.unitop"})
 public class PortalApplication {
 
   public static void main(String[] args) throws Exception {

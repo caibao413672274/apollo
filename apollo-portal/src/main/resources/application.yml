@@ -1,8 +1,16 @@
+apollo:
+  bootstrap:
+    enabled: true
+    # will inject 'application' and 'TEST1.apollo' namespaces in bootstrap phase
+    namespaces: application,redis
 spring:
   application:
     name: apollo-portal
   profiles:
     active: ${apollo_profile}
+  session:
+    namespace: ApolloPortal
+    maxInactiveIntervalInSeconds: 7200
   jpa:
     properties:
       hibernate:
@@ -25,3 +33,13 @@ management:
       order: DOWN, OUT_OF_SERVICE, UNKNOWN, UP
 
 
+
+unitop:
+  sso:
+    server: ${sso.url}
+    logout:
+      path: /logout
+    redis:
+      expire:
+        minite: 480
+    ignorePattern: /jobAPI,/router,/sessionTimeout.jsp,/test.html,/static,/assets,/login,/doLogin,/**/app/**,/health

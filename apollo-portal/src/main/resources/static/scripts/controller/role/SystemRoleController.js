@@ -93,7 +93,7 @@ angular.module('systemRole', ['app.service', 'apollo.directive', 'app.util', 'to
                             appName: result.name,
                             departmentName: result.orgName,
                             departmentId: result.orgId,
-                            ownerName: result.ownerName
+                            ownerName: result.ownerDisplayName
                         });
 
                         $scope.operateManageAppMasterRoleBtn = false;

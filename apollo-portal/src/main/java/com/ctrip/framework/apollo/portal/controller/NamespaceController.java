@@ -21,6 +21,7 @@ import com.ctrip.framework.apollo.portal.service.AppNamespaceService;
 import com.ctrip.framework.apollo.portal.service.NamespaceService;
 import com.ctrip.framework.apollo.portal.service.RoleInitializationService;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.ctrip.framework.apollo.tracer.Tracer;
 import com.google.common.collect.Sets;
 import org.slf4j.Logger;
@@ -129,7 +130,7 @@ public class NamespaceController {
     checkModel(!CollectionUtils.isEmpty(models));
 
     String namespaceName = models.get(0).getNamespace().getNamespaceName();
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator = CommonUtils.getOperator(userInfoHolder);
 
     roleInitializationService.initNamespaceRoles(appId, namespaceName, operator);
     roleInitializationService.initNamespaceEnvRoles(appId, namespaceName, operator);
@@ -149,7 +150,7 @@ public class NamespaceController {
       }
     }
 
-    namespaceService.assignNamespaceRoleToOperator(appId, namespaceName,userInfoHolder.getUser().getUserId());
+    namespaceService.assignNamespaceRoleToOperator(appId, namespaceName, CommonUtils.getOperator(userInfoHolder));
 
     return ResponseEntity.ok().build();
   }
@@ -201,7 +202,7 @@ public class NamespaceController {
 
     if (portalConfig.canAppAdminCreatePrivateNamespace() || createdAppNamespace.isPublic()) {
       namespaceService.assignNamespaceRoleToOperator(appId, appNamespace.getName(),
-          userInfoHolder.getUser().getUserId());
+             CommonUtils.getOperator(userInfoHolder));
     }
 
     publisher.publishEvent(new AppNamespaceCreationEvent(createdAppNamespace));

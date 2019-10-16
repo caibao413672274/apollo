@@ -8,6 +8,7 @@ import com.ctrip.framework.apollo.core.enums.ConfigFileFormat;
 import com.ctrip.framework.apollo.core.utils.StringUtils;
 import com.ctrip.framework.apollo.portal.repository.AppNamespaceRepository;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import org.springframework.context.annotation.Lazy;
@@ -84,7 +85,7 @@ public class AppNamespaceService {
     appNs.setName(ConfigConsts.NAMESPACE_APPLICATION);
     appNs.setComment("default app namespace");
     appNs.setFormat(ConfigFileFormat.Properties.getValue());
-    String userId = userInfoHolder.getUser().getUserId();
+    String userId =  CommonUtils.getOperator(userInfoHolder);
     appNs.setDataChangeCreatedBy(userId);
     appNs.setDataChangeLastModifiedBy(userId);
 
@@ -129,7 +130,7 @@ public class AppNamespaceService {
 
     String operator = appNamespace.getDataChangeCreatedBy();
     if (StringUtils.isEmpty(operator)) {
-      operator = userInfoHolder.getUser().getUserId();
+      operator =  CommonUtils.getOperator(userInfoHolder);
       appNamespace.setDataChangeCreatedBy(operator);
     }
 
@@ -191,7 +192,7 @@ public class AppNamespaceService {
           String.format("AppNamespace not exists. AppId = %s, NamespaceName = %s", appId, namespaceName));
     }
 
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator =  CommonUtils.getOperator(userInfoHolder);
 
     // this operator is passed to com.ctrip.framework.apollo.portal.listener.DeletionListener.onAppNamespaceDeletionEvent
     appNamespace.setDataChangeLastModifiedBy(operator);

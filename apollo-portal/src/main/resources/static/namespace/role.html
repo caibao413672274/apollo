@@ -39,6 +39,46 @@
                 <div class="row">
                     <div class="form-horizontal">
                         <div class="form-group">
+                            <label class="col-sm-2 control-label">查看权<br><small>(可以查看配置)</small></label>
+                            <div class="col-sm-8">
+                                <form class="form-inline" ng-submit="assignRoleToUser('LookUpNamespace')">
+                                    <div class="form-group">
+                                        <apollouserselector apollo-id="lookUpRoleWidgetId"></apollouserselector>
+                                        <select class="form-control input-sm" ng-model="lookUpRoleSelectedEnv">
+                                            <option value="">{{'Namespace.Role.AllEnv' | translate }}</option>
+                                            <option ng-repeat="env in envs" ng-value="env">{{env}}</option>
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-default" style="margin-left: 20px;" ng-disabled="lookUpRoleSubmitBtnDisabled">{{'Namespace.Role.Add' | translate }}</button>
+                                </form>
+                                <!-- Split button -->
+                                <div class="item-container">
+                                    <h5>{{'Namespace.Role.AllEnv' | translate }}</h5>
+                                    <div class="btn-group item-info" ng-repeat="user in rolesAssignedUsers.lookUpRoleUsers">
+                                        <button type="button" class="btn btn-default" ng-bind="user.name"></button>
+                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                                                aria-haspopup="true" aria-expanded="false" ng-click="removeUserRole('LookUpNamespace', user.userId, null)">
+                                            <span class="glyphicon glyphicon-remove"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="item-container" ng-repeat="env in envs">
+                                    <h5>{{env}}</h5>
+                                    <div class="btn-group item-info" ng-repeat="user in envRolesAssignedUsers[env].lookUpRoleUsers">
+                                        <button type="button" class="btn btn-default" ng-bind="user.name"></button>
+                                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown"
+                                                aria-haspopup="true" aria-expanded="false" ng-click="removeUserRole('LookUpNamespace', user.userId, env)">
+                                            <span class="glyphicon glyphicon-remove"></span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-horizontal">
+                        <div class="form-group">
                             <label
                                 class="col-sm-2 control-label">{{'Namespace.Role.GrantModifyTo' | translate }}<br><small>{{'Namespace.Role.GrantModifyTo2' | translate }}</small></label>
                             <div class="col-sm-8">
@@ -58,7 +98,7 @@
                                     <h5>{{'Namespace.Role.AllEnv' | translate }}</h5>
                                     <div class="btn-group item-info"
                                         ng-repeat="user in rolesAssignedUsers.modifyRoleUsers">
-                                        <button type="button" class="btn btn-default" ng-bind="user.userId"></button>
+                                        <button type="button" class="btn btn-default" ng-bind="user.name"></button>
                                         <button type="button" class="btn btn-default dropdown-toggle"
                                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                                             ng-click="removeUserRole('ModifyNamespace', user.userId, null)">
@@ -70,7 +110,7 @@
                                     <h5>{{env}}</h5>
                                     <div class="btn-group item-info"
                                         ng-repeat="user in envRolesAssignedUsers[env].modifyRoleUsers">
-                                        <button type="button" class="btn btn-default" ng-bind="user.userId"></button>
+                                        <button type="button" class="btn btn-default" ng-bind="user.name"></button>
                                         <button type="button" class="btn btn-default dropdown-toggle"
                                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                                             ng-click="removeUserRole('ModifyNamespace', user.userId, env)">
@@ -107,7 +147,7 @@
                                     <h5>{{'Namespace.Role.AllEnv' | translate }}</h5>
                                     <div class="btn-group item-info"
                                         ng-repeat="user in rolesAssignedUsers.releaseRoleUsers">
-                                        <button type="button" class="btn btn-default" ng-bind="user.userId"></button>
+                                        <button type="button" class="btn btn-default" ng-bind="user.name"></button>
                                         <button type="button" class="btn btn-default dropdown-toggle"
                                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                                             ng-click="removeUserRole('ReleaseNamespace', user.userId, null)">
@@ -120,7 +160,7 @@
                                     <h5>{{env}}</h5>
                                     <div class="btn-group item-info"
                                         ng-repeat="user in envRolesAssignedUsers[env].releaseRoleUsers">
-                                        <button type="button" class="btn btn-default" ng-bind="user.userId"></button>
+                                        <button type="button" class="btn btn-default" ng-bind="user.name"></button>
                                         <button type="button" class="btn btn-default dropdown-toggle"
                                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
                                             ng-click="removeUserRole('ReleaseNamespace', user.userId, env)">

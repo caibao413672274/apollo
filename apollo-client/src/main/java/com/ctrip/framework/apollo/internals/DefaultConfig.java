@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.ctrip.framework.apollo.util.EncryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,6 +150,24 @@ public class DefaultConfig extends AbstractConfig implements RepositoryChangeLis
   }
 
   private void updateConfig(Properties newConfigProperties, ConfigSourceType sourceType) {
+   //配置加解密处理
+    Set<Object> keys = newConfigProperties.keySet();
+    for (Object k : keys) {
+      String key = k.toString();
+      String value = newConfigProperties.getProperty(key).trim();
+      // 加密Value
+      if (value.startsWith("ENC(") && value.endsWith(")")) {
+        logger.debug("加密Value {}", value);
+        // 解密然后重新赋值
+        try {
+          String decryptValue = EncryUtil.decryptAES(value.substring(4, value.length()-1));
+          newConfigProperties.setProperty(key, decryptValue);
+        } catch (Exception e) {
+          logger.error("加密配置解密失败", e);
+        }
+      }
+    }
+
     m_configProperties.set(newConfigProperties);
     m_sourceType = sourceType;
   }

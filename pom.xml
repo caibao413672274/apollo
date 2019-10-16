@@ -109,7 +109,10 @@
 		<module>apollo-demo</module>
 		<module>apollo-mockserver</module>
 		<module>apollo-openapi</module>
-	</modules>
+		<module>unitop-demo</module>
+		<module>spring-cache-session</module>
+        <module>unitop-config-client</module>
+    </modules>
 
 	<dependencyManagement>
 		<dependencies>

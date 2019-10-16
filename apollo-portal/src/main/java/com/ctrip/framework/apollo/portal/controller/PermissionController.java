@@ -17,6 +17,7 @@ import com.ctrip.framework.apollo.portal.service.RolePermissionService;
 import com.ctrip.framework.apollo.portal.service.SystemRoleManagerService;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
 import com.ctrip.framework.apollo.portal.spi.UserService;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.ctrip.framework.apollo.portal.util.RoleUtils;
 import com.google.common.collect.Sets;
 import com.google.gson.JsonObject;
@@ -24,13 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -64,7 +59,7 @@ public class PermissionController {
 
   @PostMapping("/apps/{appId}/initPermission")
   public ResponseEntity<Void> initAppPermission(@PathVariable String appId, @RequestBody String namespaceName) {
-    roleInitializationService.initNamespaceEnvRoles(appId, namespaceName, userInfoHolder.getUser().getUserId());
+    roleInitializationService.initNamespaceEnvRoles(appId, namespaceName,  CommonUtils.getOperator(userInfoHolder));
     return ResponseEntity.ok().build();
   }
 
@@ -111,7 +106,14 @@ public class PermissionController {
     return ResponseEntity.ok().body(permissionCondition);
   }
 
+  @RequestMapping(value = "/permissions/user/{permissionType}", method = RequestMethod.GET)
+  public ResponseEntity<PermissionCondition> hasPermissionForUser(@PathVariable String permissionType) {
+    PermissionCondition permissionCondition = new PermissionCondition();
 
+    permissionCondition.setHasPermission(rolePermissionService.hasPermissionForUser(userInfoHolder.getUser().getUserId(),permissionType));
+
+    return ResponseEntity.ok().body(permissionCondition);
+  }
   @GetMapping("/apps/{appId}/envs/{env}/namespaces/{namespaceName}/role_users")
   public NamespaceEnvRolesAssignedUsers getNamespaceEnvRoles(@PathVariable String appId, @PathVariable String env, @PathVariable String namespaceName) {
 
@@ -132,6 +134,9 @@ public class PermissionController {
     Set<UserInfo> modifyNamespaceUsers =
         rolePermissionService.queryUsersWithRole(RoleUtils.buildModifyNamespaceRoleName(appId, namespaceName, env));
     assignedUsers.setModifyRoleUsers(modifyNamespaceUsers);
+    Set<UserInfo> lookUpNamespaceUsers =
+            rolePermissionService.queryUsersWithRole(RoleUtils.buildLookUpNamespaceRoleName(appId, namespaceName, env));
+    assignedUsers.setLookUpRoleUsers(lookUpNamespaceUsers);
 
     return assignedUsers;
   }
@@ -152,7 +157,7 @@ public class PermissionController {
       throw new BadRequestException("env is illegal");
     }
     Set<String> assignedUser = rolePermissionService.assignRoleToUsers(RoleUtils.buildNamespaceRoleName(appId, namespaceName, roleType, env),
-        Sets.newHashSet(user), userInfoHolder.getUser().getUserId());
+        Sets.newHashSet(user),  CommonUtils.getOperator(userInfoHolder));
     if (CollectionUtils.isEmpty(assignedUser)) {
       throw new BadRequestException(user + " already authorized");
     }
@@ -174,7 +179,7 @@ public class PermissionController {
       throw new BadRequestException("env is illegal");
     }
     rolePermissionService.removeRoleFromUsers(RoleUtils.buildNamespaceRoleName(appId, namespaceName, roleType, env),
-        Sets.newHashSet(user), userInfoHolder.getUser().getUserId());
+        Sets.newHashSet(user), CommonUtils.getOperator(userInfoHolder));
     return ResponseEntity.ok().build();
   }
 
@@ -192,6 +197,9 @@ public class PermissionController {
     Set<UserInfo> modifyNamespaceUsers =
         rolePermissionService.queryUsersWithRole(RoleUtils.buildModifyNamespaceRoleName(appId, namespaceName));
     assignedUsers.setModifyRoleUsers(modifyNamespaceUsers);
+    Set<UserInfo> lookUpNamespaceUsers =
+            rolePermissionService.queryUsersWithRole(RoleUtils.buildLookUpNamespaceRoleName(appId, namespaceName));
+    assignedUsers.setLookUpRoleUsers(lookUpNamespaceUsers);
 
     return assignedUsers;
   }
@@ -207,7 +215,7 @@ public class PermissionController {
       throw new BadRequestException("role type is illegal");
     }
     Set<String> assignedUser = rolePermissionService.assignRoleToUsers(RoleUtils.buildNamespaceRoleName(appId, namespaceName, roleType),
-        Sets.newHashSet(user), userInfoHolder.getUser().getUserId());
+        Sets.newHashSet(user), CommonUtils.getOperator(userInfoHolder));
     if (CollectionUtils.isEmpty(assignedUser)) {
       throw new BadRequestException(user + " already authorized");
     }
@@ -225,7 +233,7 @@ public class PermissionController {
       throw new BadRequestException("role type is illegal");
     }
     rolePermissionService.removeRoleFromUsers(RoleUtils.buildNamespaceRoleName(appId, namespaceName, roleType),
-        Sets.newHashSet(user), userInfoHolder.getUser().getUserId());
+        Sets.newHashSet(user), CommonUtils.getOperator(userInfoHolder));
     return ResponseEntity.ok().build();
   }
 
@@ -251,7 +259,7 @@ public class PermissionController {
       throw new BadRequestException("role type is illegal");
     }
     Set<String> assignedUsers = rolePermissionService.assignRoleToUsers(RoleUtils.buildAppRoleName(appId, roleType),
-        Sets.newHashSet(user), userInfoHolder.getUser().getUserId());
+        Sets.newHashSet(user), CommonUtils.getOperator(userInfoHolder));
     if (CollectionUtils.isEmpty(assignedUsers)) {
       throw new BadRequestException(user + " already authorized");
     }
@@ -269,7 +277,7 @@ public class PermissionController {
       throw new BadRequestException("role type is illegal");
     }
     rolePermissionService.removeRoleFromUsers(RoleUtils.buildAppRoleName(appId, roleType),
-        Sets.newHashSet(user), userInfoHolder.getUser().getUserId());
+        Sets.newHashSet(user), CommonUtils.getOperator(userInfoHolder));
     return ResponseEntity.ok().build();
   }
 
@@ -285,7 +293,7 @@ public class PermissionController {
 
     userIds.forEach(this::checkUserExists);
     rolePermissionService.assignRoleToUsers(SystemRoleManagerService.CREATE_APPLICATION_ROLE_NAME,
-            new HashSet<>(userIds), userInfoHolder.getUser().getUserId());
+            new HashSet<>(userIds), CommonUtils.getOperator(userInfoHolder));
 
     return ResponseEntity.ok().build();
   }
@@ -297,15 +305,17 @@ public class PermissionController {
     Set<String> userIds = new HashSet<>();
     userIds.add(userId);
     rolePermissionService.removeRoleFromUsers(SystemRoleManagerService.CREATE_APPLICATION_ROLE_NAME,
-            userIds, userInfoHolder.getUser().getUserId());
+            userIds, CommonUtils.getOperator(userInfoHolder));
     return ResponseEntity.ok().build();
   }
 
   @PreAuthorize(value = "@permissionValidator.isSuperAdmin()")
   @GetMapping("/system/role/createApplication")
-  public List<String> getCreateApplicationRoleUsers() {
+  public List<UserInfo> getCreateApplicationRoleUsers() {
+//    return rolePermissionService.queryUsersWithRole(SystemRoleManagerService.CREATE_APPLICATION_ROLE_NAME)
+//            .stream().map(UserInfo::getUserId).collect(Collectors.toList());
     return rolePermissionService.queryUsersWithRole(SystemRoleManagerService.CREATE_APPLICATION_ROLE_NAME)
-            .stream().map(UserInfo::getUserId).collect(Collectors.toList());
+            .stream().collect(Collectors.toList());
   }
 
   @GetMapping("/system/role/createApplication/{userId}")
@@ -319,11 +329,11 @@ public class PermissionController {
   @PostMapping("/apps/{appId}/system/master/{userId}")
   public ResponseEntity<Void> addManageAppMasterRoleToUser(@PathVariable String appId, @PathVariable String userId) {
     checkUserExists(userId);
-    roleInitializationService.initManageAppMasterRole(appId, userInfoHolder.getUser().getUserId());
+    roleInitializationService.initManageAppMasterRole(appId, CommonUtils.getOperator(userInfoHolder));
     Set<String> userIds = new HashSet<>();
     userIds.add(userId);
     rolePermissionService.assignRoleToUsers(RoleUtils.buildAppRoleName(appId, PermissionType.MANAGE_APP_MASTER),
-            userIds, userInfoHolder.getUser().getUserId());
+            userIds, CommonUtils.getOperator(userInfoHolder));
     return ResponseEntity.ok().build();
   }
 
@@ -331,11 +341,11 @@ public class PermissionController {
   @DeleteMapping("/apps/{appId}/system/master/{userId}")
   public ResponseEntity<Void> forbidManageAppMaster(@PathVariable String appId, @PathVariable String  userId) {
     checkUserExists(userId);
-    roleInitializationService.initManageAppMasterRole(appId, userInfoHolder.getUser().getUserId());
+    roleInitializationService.initManageAppMasterRole(appId,CommonUtils.getOperator(userInfoHolder));
     Set<String> userIds = new HashSet<>();
     userIds.add(userId);
     rolePermissionService.removeRoleFromUsers(RoleUtils.buildAppRoleName(appId, PermissionType.MANAGE_APP_MASTER),
-            userIds, userInfoHolder.getUser().getUserId());
+            userIds, CommonUtils.getOperator(userInfoHolder));
     return ResponseEntity.ok().build();
   }
 

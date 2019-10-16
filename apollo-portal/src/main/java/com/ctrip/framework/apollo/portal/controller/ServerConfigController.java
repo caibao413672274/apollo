@@ -7,6 +7,8 @@ import com.ctrip.framework.apollo.portal.repository.ServerConfigRepository;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
 import java.util.Objects;
 import javax.validation.Valid;
+
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,7 +33,7 @@ public class ServerConfigController {
   @PreAuthorize(value = "@permissionValidator.isSuperAdmin()")
   @PostMapping("/server/config")
   public ServerConfig createOrUpdate(@Valid @RequestBody ServerConfig serverConfig) {
-    String modifiedBy = userInfoHolder.getUser().getUserId();
+    String modifiedBy = CommonUtils.getOperator(userInfoHolder);
 
     ServerConfig storedConfig = serverConfigRepository.findByKey(serverConfig.getKey());
 

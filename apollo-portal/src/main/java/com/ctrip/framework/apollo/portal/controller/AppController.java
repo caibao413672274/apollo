@@ -12,6 +12,7 @@ import com.ctrip.framework.apollo.portal.component.PortalSettings;
 import com.ctrip.framework.apollo.portal.entity.model.AppModel;
 import com.ctrip.framework.apollo.portal.entity.po.Role;
 import com.ctrip.framework.apollo.portal.entity.vo.EnvClusterInfo;
+import com.ctrip.framework.apollo.portal.entity.vo.PermissionCondition;
 import com.ctrip.framework.apollo.portal.listener.AppCreationEvent;
 import com.ctrip.framework.apollo.portal.listener.AppDeletionEvent;
 import com.ctrip.framework.apollo.portal.listener.AppInfoChangedEvent;
@@ -19,7 +20,9 @@ import com.ctrip.framework.apollo.portal.service.AppService;
 import com.ctrip.framework.apollo.portal.service.RoleInitializationService;
 import com.ctrip.framework.apollo.portal.service.RolePermissionService;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.ctrip.framework.apollo.portal.util.RoleUtils;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Sets;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
@@ -28,21 +31,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -70,16 +67,47 @@ public class AppController {
     this.rolePermissionService = rolePermissionService;
     this.roleInitializationService = roleInitializationService;
   }
+  private String getAppCacheKey(){
+    String key="APOLLO_APPLIST_CACHE";
+    return key;
+  } @RequestMapping(value = "", method = RequestMethod.GET)
+  public List<App> findApps(@RequestParam(value = "appIds", required = false) String appIds,HttpSession session) {
+//    if (StringUtils.isEmpty(appIds)) {
+//      return appService.findAll();
+//    } else {
+//      return appService.findByAppIds(Sets.newHashSet(appIds.split(",")));
+//    }
 
-  @GetMapping
-  public List<App> findApps(@RequestParam(value = "appIds", required = false) String appIds) {
-    if (StringUtils.isEmpty(appIds)) {
-      return appService.findAll();
-    } else {
-      return appService.findByAppIds(Sets.newHashSet(appIds.split(",")));
+    List<App> appList=(List<App>) session.getAttribute(getAppCacheKey());
+
+    if (CollectionUtils.isEmpty(appList)) {
+      appList= appService.findAll();
+      session.setAttribute(getAppCacheKey(),appList);
     }
-  }
 
+    if (!StringUtils.isEmpty(appIds)) {
+      Set<String> ids=Sets.newHashSet(appIds.split(","));
+      appList=  appList.stream().filter(app-> ids.contains(app.getAppId())).collect(Collectors.toList());
+    }
+
+    return appList;
+  }
+  @RequestMapping(value = "/{appId}/check-lookup", method = RequestMethod.GET)
+  public ResponseEntity<PermissionCondition> checkLookup(@PathVariable String appId) {
+    PermissionCondition permissionCondition = new PermissionCondition();
+    boolean lookup=false;
+    if(!StringUtils.isEmpty(appId)) {
+      List<App> appList = appService.findAll();
+      if(appList!=null){
+        Set<String> appIds=   FluentIterable.from(appList).transform(app -> app.getAppId()).toSet();
+        if(appIds.contains(appId))lookup=true;
+      }
+    }
+    permissionCondition.setHasPermission(
+            lookup       );
+
+    return ResponseEntity.ok().body(permissionCondition);
+  }
   @GetMapping("/search")
   public PageDTO<App> searchByAppIdOrAppName(@RequestParam(value = "query", required = false) String query,
       Pageable pageable) {
@@ -121,7 +149,7 @@ public class AppController {
     if (!CollectionUtils.isEmpty(admins)) {
       rolePermissionService
           .assignRoleToUsers(RoleUtils.buildAppMasterRoleName(createdApp.getAppId()),
-              admins, userInfoHolder.getUser().getUserId());
+              admins,  CommonUtils.getOperator(userInfoHolder));
     }
 
     return createdApp;
@@ -162,7 +190,7 @@ public class AppController {
   public ResponseEntity<Void> create(@PathVariable String env, @Valid @RequestBody App app) {
     appService.createAppInRemote(Env.valueOf(env), app);
 
-    roleInitializationService.initNamespaceSpecificEnvRoles(app.getAppId(), ConfigConsts.NAMESPACE_APPLICATION, env, userInfoHolder.getUser().getUserId());
+    roleInitializationService.initNamespaceSpecificEnvRoles(app.getAppId(), ConfigConsts.NAMESPACE_APPLICATION, env,  CommonUtils.getOperator(userInfoHolder));
 
     return ResponseEntity.ok().build();
   }

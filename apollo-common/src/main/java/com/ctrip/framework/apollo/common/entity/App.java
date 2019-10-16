@@ -1,6 +1,8 @@
 package com.ctrip.framework.apollo.common.entity;
 
 import com.ctrip.framework.apollo.common.utils.InputValidator;
+
+import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import org.hibernate.annotations.SQLDelete;
@@ -41,6 +43,17 @@ public class App extends BaseEntity {
   @NotBlank(message = "OwnerEmail cannot be blank")
   @Column(name = "OwnerEmail", nullable = false)
   private String ownerEmail;
+
+  @Transient
+  private String ownerDisplayName;
+
+  public String getOwnerDisplayName() {
+    return ownerDisplayName;
+  }
+
+  public void setOwnerDisplayName(String ownerDisplayName) {
+    this.ownerDisplayName = ownerDisplayName;
+  }
 
   public String getAppId() {
     return appId;

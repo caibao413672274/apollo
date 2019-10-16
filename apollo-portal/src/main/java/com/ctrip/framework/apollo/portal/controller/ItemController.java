@@ -15,6 +15,7 @@ import com.ctrip.framework.apollo.portal.entity.vo.NamespaceIdentifier;
 import com.ctrip.framework.apollo.portal.service.ItemService;
 import com.ctrip.framework.apollo.portal.service.NamespaceService;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
@@ -76,7 +77,8 @@ public class ItemController {
     //protect
     item.setLineNum(0);
     item.setId(0);
-    String userId = userInfoHolder.getUser().getUserId();
+
+    String userId = CommonUtils.getOperator(userInfoHolder);
     item.setDataChangeCreatedBy(userId);
     item.setDataChangeLastModifiedBy(userId);
     item.setDataChangeCreatedTime(null);
@@ -92,7 +94,8 @@ public class ItemController {
                          @RequestBody ItemDTO item) {
     checkModel(isValidItem(item));
 
-    String username = userInfoHolder.getUser().getUserId();
+
+    String username = CommonUtils.getOperator(userInfoHolder);
     item.setDataChangeLastModifiedBy(username);
 
     configService.updateItem(appId, Env.valueOf(env), clusterName, namespaceName, item);
@@ -112,7 +115,7 @@ public class ItemController {
       throw new BadRequestException("Invalid request, item and namespace do not match!");
     }
 
-    configService.deleteItem(Env.valueOf(env), itemId, userInfoHolder.getUser().getUserId());
+    configService.deleteItem(Env.valueOf(env), itemId, CommonUtils.getOperator(userInfoHolder));
   }
 
 

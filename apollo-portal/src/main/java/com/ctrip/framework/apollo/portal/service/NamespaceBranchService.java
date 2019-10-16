@@ -12,6 +12,7 @@ import com.ctrip.framework.apollo.portal.component.ItemsComparator;
 import com.ctrip.framework.apollo.portal.constant.TracerEventType;
 import com.ctrip.framework.apollo.portal.entity.bo.NamespaceBO;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
+import com.ctrip.framework.apollo.portal.util.CommonUtils;
 import com.ctrip.framework.apollo.tracer.Tracer;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +48,7 @@ public class NamespaceBranchService {
 
   @Transactional
   public NamespaceDTO createBranch(String appId, Env env, String parentClusterName, String namespaceName) {
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator = CommonUtils.getOperator(userInfoHolder);//userInfoHolder.getUser().getUserId();
     return createBranch(appId, env, parentClusterName, namespaceName, operator);
   }
 
@@ -71,7 +72,7 @@ public class NamespaceBranchService {
   public void updateBranchGrayRules(String appId, Env env, String clusterName, String namespaceName,
                                     String branchName, GrayReleaseRuleDTO rules) {
 
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator =  CommonUtils.getOperator(userInfoHolder);
     updateBranchGrayRules(appId, env, clusterName, namespaceName, branchName, rules, operator);
   }
 
@@ -89,7 +90,7 @@ public class NamespaceBranchService {
   public void deleteBranch(String appId, Env env, String clusterName, String namespaceName,
                            String branchName) {
 
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator =  CommonUtils.getOperator(userInfoHolder);
     deleteBranch(appId, env, clusterName, namespaceName, branchName, operator);
   }
 
@@ -105,7 +106,7 @@ public class NamespaceBranchService {
   public ReleaseDTO merge(String appId, Env env, String clusterName, String namespaceName,
                           String branchName, String title, String comment,
                           boolean isEmergencyPublish, boolean deleteBranch) {
-    String operator = userInfoHolder.getUser().getUserId();
+    String operator =  CommonUtils.getOperator(userInfoHolder);
     return merge(appId, env, clusterName, namespaceName, branchName, title, comment, isEmergencyPublish, deleteBranch, operator);
   }
 
