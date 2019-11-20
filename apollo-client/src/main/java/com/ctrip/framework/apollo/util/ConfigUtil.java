@@ -2,6 +2,7 @@ package com.ctrip.framework.apollo.util;
 
 import com.google.common.util.concurrent.RateLimiter;
 import java.io.File;
+import java.net.InetAddress;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import com.ctrip.framework.apollo.core.enums.Env;
 import com.ctrip.framework.apollo.core.enums.EnvUtils;
 import com.ctrip.framework.foundation.Foundation;
 import com.google.common.base.Strings;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Jason Song(song_s@ctrip.com)

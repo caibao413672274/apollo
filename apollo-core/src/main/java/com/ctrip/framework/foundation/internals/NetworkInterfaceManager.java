@@ -1,5 +1,7 @@
 package com.ctrip.framework.foundation.internals;
 
+import com.ctrip.framework.apollo.core.utils.StringUtils;
+
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -63,7 +65,11 @@ public enum NetworkInterfaceManager {
   }
 
   public String getLocalHostAddress() {
-    return m_local.getHostAddress();
+    //加入docker_host环境变量支持
+    String ip = System.getenv("docker_host");
+    if (StringUtils.isEmpty(ip)) {
+      return m_local.getHostAddress();
+    }else return ip;
   }
 
   public String getLocalHostName() {

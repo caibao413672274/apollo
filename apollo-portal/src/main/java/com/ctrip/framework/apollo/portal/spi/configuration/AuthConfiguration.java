@@ -85,6 +85,20 @@ public class AuthConfiguration {
       return registrationBean;
     }
     @Bean
+    public FilterRegistrationBean accessControlAllowOriginFilter() {
+
+      FilterRegistrationBean registrationBean = new FilterRegistrationBean();
+      registrationBean.setFilter(new AccessControlAllowOriginFilter());
+      registrationBean.addUrlPatterns("/*");
+
+      registrationBean.setName("accessControlAllowOriginFilter");
+      registrationBean.setOrder(1);
+
+
+      return registrationBean;
+    }
+
+    @Bean
     public UnitopLocalUserService unitopLocalUserService(UTUserRepository utUserRepository,UserService utUserService) {
       return new UnitopLocalUserService(utUserRepository,utUserService);
     }

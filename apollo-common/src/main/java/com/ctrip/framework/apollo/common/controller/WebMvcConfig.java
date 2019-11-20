@@ -51,6 +51,7 @@ public class WebMvcConfig implements WebMvcConfigurer, WebServerFactoryCustomize
   private void addCacheControl(ResourceHandlerRegistry registry, String folder, int cachePeriod) {
     registry.addResourceHandler(String.format("/%s/**", folder))
         .addResourceLocations(String.format("classpath:/static/%s/", folder))
-        .setCachePeriod(cachePeriod);
+        .setCachePeriod(cachePeriod)
+    ;
   }
 }

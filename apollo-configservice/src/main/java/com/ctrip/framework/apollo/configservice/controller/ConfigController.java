@@ -206,11 +206,29 @@ public class ConfigController {
   }
 
   private String tryToGetClientIp(HttpServletRequest request) {
-    String forwardedFor = request.getHeader("X-FORWARDED-FOR");
-    if (!Strings.isNullOrEmpty(forwardedFor)) {
-      return X_FORWARDED_FOR_SPLITTER.splitToList(forwardedFor).get(0);
+//    String forwardedFor = request.getHeader("X-FORWARDED-FOR");
+//    if (!Strings.isNullOrEmpty(forwardedFor)) {
+//      return X_FORWARDED_FOR_SPLITTER.splitToList(forwardedFor).get(0);
+//    }
+//    return request.getRemoteAddr();
+    return getRemoteIp(request);
+  }
+  private String getRemoteIp(HttpServletRequest request) {
+    String unknown = "unknown";
+    String ip = request.getHeader("x-forwarded-for");
+    if (!Strings.isNullOrEmpty(ip)) {
+      return X_FORWARDED_FOR_SPLITTER.splitToList(ip).get(0);
     }
-    return request.getRemoteAddr();
+    if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
+      ip = request.getHeader("PRoxy-Client-IP");
+    }
+    if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
+      ip = request.getHeader("WL-Proxy-Client-IP");
+    }
+    if (ip == null || ip.length() == 0 || unknown.equalsIgnoreCase(ip)) {
+      ip = request.getRemoteAddr();
+    }
+    return ip;
   }
 
   ApolloNotificationMessages transformMessages(String messagesAsString) {
